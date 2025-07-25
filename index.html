@@ -251,12 +251,41 @@
     <img src="" alt="Zoomed image" />
   </div>
 
-  <script>
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // Firebase imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      onValue,
+      set,
+      push,
+      update,
+      get,
+      child
+    } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+
     const ADMIN_PASSWORD = "Ku2023!@";
 
-    // In-memory data store
+    // Your Firebase config for battle-ship-7fef4
+    const firebaseConfig = {
+      apiKey: "AIzaSyCLhyvtqQICbcyuS4cr_1p5pXvQrMBDtXo",
+      authDomain: "battle-ship-7fef4.firebaseapp.com",
+      databaseURL: "https://battle-ship-7fef4-default-rtdb.firebaseio.com",
+      projectId: "battle-ship-7fef4",
+      storageBucket: "battle-ship-7fef4.firebasestorage.app",
+      messagingSenderId: "1063233375775",
+      appId: "1:1063233375775:web:de60b46a690a8c013a4f2a"
+    };
+
+    // Initialize Firebase app and database
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const linksRef = ref(db, "links");
+
+    // In-memory cache for links, key: Firebase push id, value: link data
     const links = {};
-    let linkIdCounter = 1;
 
     // DOM elements
     const linkList = document.getElementById("linkList");
@@ -391,7 +420,7 @@
         return;
       }
       keys.forEach(id => {
-        const { name, url, clicks, image, description } = links[id];
+        const { name, url, clicks = 0, image, description } = links[id];
         const tr = document.createElement("tr");
 
         const safeName = escapeHtml(name);
@@ -412,12 +441,39 @@
 
     // Increment clicks
     function incrementClicks(id) {
-      links[id].clicks++;
+      // Defensive fallback in case clicks missing
+      const currentClicks = links[id].clicks || 0;
+      links[id].clicks = currentClicks + 1;
+      update(ref(db, "links/" + id), { clicks: links[id].clicks });
       renderAdminTable();
     }
 
+    // Load links from Firebase
+    function loadLinks() {
+      onValue(linksRef, (snapshot) => {
+        const data = snapshot.val() || {};
+        // Update in-memory links object fully
+        Object.keys(data).forEach(key => {
+          links[key] = data[key];
+          // Defensive: ensure clicks exists
+          if (typeof links[key].clicks !== "number") {
+            links[key].clicks = 0;
+          }
+        });
+        // Remove any links that no longer exist in DB
+        Object.keys(links).forEach(key => {
+          if (!(key in data)) {
+            delete links[key];
+          }
+        });
+
+        renderLinks();
+        renderAdminTable();
+      });
+    }
+
     // Add link form submit
-    addLinkForm.addEventListener("submit", (e) => {
+    addLinkForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const name = document.getElementById("siteName").value.trim();
       const url = document.getElementById("siteURL").value.trim();
@@ -429,11 +485,12 @@
         return;
       }
 
-      const id = linkIdCounter++;
-      links[id] = { name, url, image, description, clicks: 0 };
+      // Push new link to Firebase
+      const newLinkRef = push(linksRef);
+      await set(newLinkRef, { name, url, image, description, clicks: 0 });
+
       addLinkForm.reset();
-      renderLinks();
-      renderAdminTable();
+      // No need to manually refresh, onValue listener updates automatically
     });
 
     // Login button click
@@ -458,8 +515,9 @@
       loginMsg.textContent = "";
     });
 
-    // Initial render
-    renderLinks();
+    // Initial load from Firebase
+    loadLinks();
+
   </script>
 
 </body>
