@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Website Hub</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    h1 { margin-bottom: 0.5em; }
+    #adminPanel { display: none; margin-top: 2em; }
+    label, input, button { display: block; margin: 0.5em 0; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1em; }
+    th, td { border: 1px solid #ccc; padding: 0.5em; text-align: left; }
+    #loginForm { max-width: 300px; margin-bottom: 2em; }
+  </style>
+</head>
+<body>
+  <h1>Website Hub</h1>
+
+  <div id="publicLinks">
+    <h2>Links</h2>
+    <ul id="linkList"></ul>
+  </div>
+
+  <hr />
+
+  <div id="loginForm">
+    <h2>Admin Login</h2>
+    <label for="adminPass">Password:</label>
+    <input type="password" id="adminPass" autocomplete="off" />
+    <button id="loginBtn">Login</button>
+    <p id="loginMsg" style="color:red;"></p>
+  </div>
+
+  <div id="adminPanel">
+    <h2>Admin Panel</h2>
+    <form id="addLinkForm">
+      <label for="siteName">Site Name:</label>
+      <input type="text" id="siteName" required />
+      <label for="siteURL">Site URL:</label>
+      <input type="url" id="siteURL" required />
+      <button type="submit">Add Link</button>
+    </form>
+
+    <h3>Link Click Counts</h3>
+    <table>
+      <thead>
+        <tr><th>Site Name</th><th>URL</th><th>Clicks</th></tr>
+      </thead>
+      <tbody id="adminLinkTable"></tbody>
+    </table>
+    <button id="logoutBtn" style="margin-top: 1em;">Logout</button>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
+
+  <script>
+    // ======= Firebase config here =======
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ======= Simple admin password (change this!) =======
+    const ADMIN_PASSWORD = "Ku2023!@";
+
+    // ======= DOM Elements =======
+    const linkList = document.getElementById("linkList");
+    const adminPanel = document.getElementById("adminPanel");
+    const loginForm = document.getElementById("loginForm");
+    const loginBtn = document.getElementById("loginBtn");
+    const loginMsg = document.getElementById("loginMsg");
+    const adminLinkTable = document.getElementById("adminLinkTable");
+    const addLinkForm = document.getElementById("addLinkForm");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    // ======= State =======
+    let isAdmin = false;
+
+    // ======= Functions =======
+
+    // Render public links
+    function renderLinks(links) {
+      linkList.innerHTML = "";
+      for (const id in links) {
+        const { name, url } = links[id];
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = url;
+        a.textContent = name;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          incrementClicks(id).then(() => {
+            window.open(url, "_blank");
+          });
+        });
+        li.appendChild(a);
+        linkList.appendChild(li);
+      }
+    }
+
+    // Render admin table with click counts
+    function renderAdminTable(links) {
+      adminLinkTable.innerHTML = "";
+      for (const id in links) {
+        const { name, url, clicks = 0 } = links[id];
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${name}</td><td><a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a></td><td>${clicks}</td>`;
+        adminLinkTable.appendChild(tr);
+      }
+    }
+
+    // Increment click count for a link
+    async function incrementClicks(id) {
+      const refClicks = db.ref(`links/${id}/clicks`);
+      const snapshot = await refClicks.once("value");
+      const currentClicks = snapshot.val() || 0;
+      await refClicks.set(currentClicks + 1);
+    }
+
+    // Fetch all links from Firebase and update UI
+    function fetchLinks() {
+      db.ref("links").on("value", (snapshot) => {
+        const data = snapshot.val() || {};
+        renderLinks(data);
+        if (isAdmin) renderAdminTable(data);
+      });
+    }
+
+    // Add new link to Firebase
+    addLinkForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = document.getElementById("siteName").value.trim();
+      const url = document.getElementById("siteURL").value.trim();
+      if (!name || !url) return;
+
+      const newLinkRef = db.ref("links").push();
+      newLinkRef.set({ name, url, clicks: 0 }).then(() => {
+        addLinkForm.reset();
+      });
+    });
+
+    // Admin login handler
+    loginBtn.addEventListener("click", () => {
+      const pass = document.getElementById("adminPass").value;
+      if (pass === ADMIN_PASSWORD) {
+        isAdmin = true;
+        loginForm.style.display = "none";
+        adminPanel.style.display = "block";
+        loginMsg.textContent = "";
+        fetchLinks();
+      } else {
+        loginMsg.textContent = "Incorrect password.";
+      }
+    });
+
+    // Logout
+    logoutBtn.addEventListener("click", () => {
+      isAdmin = false;
+      adminPanel.style.display = "none";
+      loginForm.style.display = "block";
+    });
+
+    // On page load, fetch links for public display
+    fetchLinks();
+  </script>
+</body>
+</html>
