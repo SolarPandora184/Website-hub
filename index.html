@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Website Hub (Local Demo)</title>
+  <title>Website Hub (Local Demo with Images & Descriptions)</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -17,24 +17,50 @@
       text-align: center;
       color: #004080;
     }
-    ul {
-      list-style: none;
+    #linkList {
       padding: 0;
+      list-style: none;
     }
-    li a {
-      display: block;
+    .link-card {
       background: #e0f0ff;
-      margin: 0.5em 0;
-      padding: 0.75em 1em;
-      text-decoration: none;
-      color: #004080;
+      border-radius: 8px;
+      box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
+      margin: 1em 0;
+      padding: 1em;
+      display: flex;
+      gap: 1em;
+      align-items: flex-start;
+    }
+    .link-card img {
+      max-width: 100px;
+      max-height: 80px;
+      object-fit: contain;
       border-radius: 6px;
-      box-shadow: 1px 1px 4px rgba(0,0,0,0.1);
-      transition: background 0.3s;
+      flex-shrink: 0;
+      background: white;
+      border: 1px solid #ccc;
     }
-    li a:hover {
-      background: #b0d4ff;
+    .link-content {
+      flex-grow: 1;
     }
+    .link-content h3 {
+      margin: 0 0 0.3em 0;
+      color: #003060;
+    }
+    .link-content p {
+      margin: 0.3em 0 0.6em 0;
+      font-size: 0.9em;
+      color: #222;
+    }
+    .link-content a {
+      font-weight: 600;
+      color: #004080;
+      text-decoration: underline;
+    }
+    .link-content a:hover {
+      color: #002050;
+    }
+
     #adminPanel {
       display: none;
       margin-top: 2em;
@@ -48,13 +74,18 @@
       margin-top: 1em;
       font-weight: 600;
     }
-    form input {
+    form input, form textarea {
       width: 100%;
       padding: 0.5em;
       margin-top: 0.25em;
       border-radius: 4px;
       border: 1px solid #ccc;
       font-size: 1em;
+      box-sizing: border-box;
+    }
+    form textarea {
+      resize: vertical;
+      min-height: 60px;
     }
     form button {
       margin-top: 1.5em;
@@ -75,14 +106,23 @@
       width: 100%;
       border-collapse: collapse;
       margin-top: 1em;
+      font-size: 0.9em;
     }
     th, td {
       text-align: left;
-      padding: 0.6em;
+      padding: 0.5em;
       border-bottom: 1px solid #ddd;
+      vertical-align: middle;
     }
     th {
       background-color: #e0f0ff;
+    }
+    td img {
+      max-width: 60px;
+      max-height: 50px;
+      object-fit: contain;
+      border-radius: 4px;
+      border: 1px solid #ccc;
     }
     #logoutBtn {
       margin-top: 1em;
@@ -117,7 +157,7 @@
 </head>
 <body>
 
-  <h1>Website Hub (Local Demo)</h1>
+  <h1>Website Hub (Local Demo with Images & Descriptions)</h1>
 
   <section id="publicLinks">
     <h2>Available Links</h2>
@@ -142,13 +182,25 @@
       <label for="siteURL">Site URL</label>
       <input type="url" id="siteURL" required placeholder="https://example.com" />
 
+      <label for="siteImage">Image URL (optional)</label>
+      <input type="url" id="siteImage" placeholder="https://example.com/image.jpg" />
+
+      <label for="siteDescription">Description (optional)</label>
+      <textarea id="siteDescription" placeholder="Short description"></textarea>
+
       <button type="submit">Add Link</button>
     </form>
 
     <h3>Link Click Counts</h3>
     <table>
       <thead>
-        <tr><th>Site Name</th><th>URL</th><th>Clicks</th></tr>
+        <tr>
+          <th>Site Name</th>
+          <th>URL</th>
+          <th>Image</th>
+          <th>Description</th>
+          <th>Clicks</th>
+        </tr>
       </thead>
       <tbody id="adminLinkTable"></tbody>
     </table>
@@ -159,7 +211,7 @@
   <script>
     const ADMIN_PASSWORD = "admin123";
 
-    // In-memory data store for links and clicks
+    // In-memory data store
     const links = {};
     let linkIdCounter = 1;
 
@@ -173,7 +225,14 @@
     const addLinkForm = document.getElementById("addLinkForm");
     const logoutBtn = document.getElementById("logoutBtn");
 
-    // Render public links
+    // Escape HTML helper
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Render public links as cards
     function renderLinks() {
       linkList.innerHTML = "";
       const keys = Object.keys(links);
@@ -182,19 +241,50 @@
         return;
       }
       keys.forEach(id => {
-        const { name, url } = links[id];
+        const { name, url, image, description } = links[id];
         const li = document.createElement("li");
-        const a = document.createElement("a");
-        a.href = url;
-        a.textContent = name;
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-        a.addEventListener("click", (e) => {
+        li.className = "link-card";
+
+        // Image element (optional)
+        let imgElem = null;
+        if (image && image.trim() !== "") {
+          imgElem = document.createElement("img");
+          imgElem.src = image.trim();
+          imgElem.alt = name + " image";
+        }
+
+        // Content container
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "link-content";
+
+        const title = document.createElement("h3");
+        title.textContent = name;
+
+        const desc = document.createElement("p");
+        if (description && description.trim() !== "") {
+          desc.textContent = description.trim();
+        }
+
+        const linkAnchor = document.createElement("a");
+        linkAnchor.href = url;
+        linkAnchor.textContent = url;
+        linkAnchor.target = "_blank";
+        linkAnchor.rel = "noopener noreferrer";
+        linkAnchor.addEventListener("click", (e) => {
           e.preventDefault();
           incrementClicks(id);
           window.open(url, "_blank");
         });
-        li.appendChild(a);
+
+        contentDiv.appendChild(title);
+        if (desc.textContent) contentDiv.appendChild(desc);
+        contentDiv.appendChild(linkAnchor);
+
+        if (imgElem) {
+          li.appendChild(imgElem);
+        }
+        li.appendChild(contentDiv);
+
         linkList.appendChild(li);
       });
     }
@@ -204,22 +294,27 @@
       adminLinkTable.innerHTML = "";
       const keys = Object.keys(links);
       if (keys.length === 0) {
-        adminLinkTable.innerHTML = '<tr><td colspan="3" style="text-align:center;"><em>No links added yet.</em></td></tr>';
+        adminLinkTable.innerHTML = '<tr><td colspan="5" style="text-align:center;"><em>No links added yet.</em></td></tr>';
         return;
       }
       keys.forEach(id => {
-        const { name, url, clicks } = links[id];
+        const { name, url, clicks, image, description } = links[id];
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${escapeHtml(name)}</td><td><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a></td><td>${clicks}</td>`;
+
+        const safeName = escapeHtml(name);
+        const safeUrl = escapeHtml(url);
+        const safeDesc = escapeHtml(description || "");
+        const safeImg = escapeHtml(image || "");
+
+        tr.innerHTML = `
+          <td>${safeName}</td>
+          <td><a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${safeUrl}</a></td>
+          <td>${safeImg ? `<img src="${safeImg}" alt="Image for ${safeName}">` : ""}</td>
+          <td>${safeDesc}</td>
+          <td>${clicks}</td>
+        `;
         adminLinkTable.appendChild(tr);
       });
-    }
-
-    // Escape HTML to prevent injection
-    function escapeHtml(text) {
-      const div = document.createElement("div");
-      div.textContent = text;
-      return div.innerHTML;
     }
 
     // Increment clicks
@@ -233,10 +328,16 @@
       e.preventDefault();
       const name = document.getElementById("siteName").value.trim();
       const url = document.getElementById("siteURL").value.trim();
-      if (!name || !url) return alert("Please fill in both fields.");
+      const image = document.getElementById("siteImage").value.trim();
+      const description = document.getElementById("siteDescription").value.trim();
+
+      if (!name || !url) {
+        alert("Please fill in Site Name and Site URL.");
+        return;
+      }
 
       const id = linkIdCounter++;
-      links[id] = { name, url, clicks: 0 };
+      links[id] = { name, url, image, description, clicks: 0 };
       addLinkForm.reset();
       renderLinks();
       renderAdminTable();
@@ -264,7 +365,7 @@
       loginMsg.textContent = "";
     });
 
-    // Initial render public links (empty at start)
+    // Initial render
     renderLinks();
   </script>
 
