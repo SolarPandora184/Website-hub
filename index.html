@@ -22,28 +22,34 @@
       list-style: none;
     }
     .link-card {
-      background: #e0f0ff;
-      border-radius: 8px;
-      box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
-      margin: 1em 0;
-      padding: 0;
       display: flex;
-      gap: 1em;
-      align-items: stretch;
+      margin: 1em 0;
+      border-radius: 8px;
       overflow: hidden;
-    }
-    .link-card img {
-      width: 150px; /* fixed width */
-      height: 100%; /* fill card height */
-      object-fit: cover;
-      border-radius: 8px 0 0 8px;
-      flex-shrink: 0;
+      box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
       background: white;
-      border-right: 1px solid #ccc;
+    }
+    .image-container {
+      background: #e0f0ff;
+      width: 160px;  /* blue block width */
+      padding: 0.5em; /* padding inside blue block */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px 0 0 8px; /* round left corners */
+      flex-shrink: 0;
+    }
+    .image-container img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 6px;
     }
     .link-content {
-      flex-grow: 1;
+      background: white;
       padding: 1em;
+      flex-grow: 1;
+      border-radius: 0 8px 8px 0; /* round right corners */
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -252,12 +258,15 @@
         const li = document.createElement("li");
         li.className = "link-card";
 
-        // Image element (optional)
-        let imgElem = null;
+        // Image container (optional)
+        let imageContainer = null;
         if (image && image.trim() !== "") {
-          imgElem = document.createElement("img");
+          imageContainer = document.createElement("div");
+          imageContainer.className = "image-container";
+          const imgElem = document.createElement("img");
           imgElem.src = image.trim();
           imgElem.alt = name + " image";
+          imageContainer.appendChild(imgElem);
         }
 
         // Content container
@@ -287,8 +296,8 @@
         if (desc.textContent) contentDiv.appendChild(desc);
         contentDiv.appendChild(linkAnchor);
 
-        if (imgElem) {
-          li.appendChild(imgElem);
+        if (imageContainer) {
+          li.appendChild(imageContainer);
         }
         li.appendChild(contentDiv);
 
