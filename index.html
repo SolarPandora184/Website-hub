@@ -168,6 +168,7 @@
       padding: 1em 1.5em;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      display: none; /* Hidden initially */
     }
 
     /* Zoom overlay styles */
@@ -262,8 +263,6 @@
       set,
       push,
       update,
-      get,
-      child
     } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
 
     const ADMIN_PASSWORD = "Ku2023!@";
@@ -493,6 +492,20 @@
       // No need to manually refresh, onValue listener updates automatically
     });
 
+    // Hide login form and admin panel on page load
+    loginForm.style.display = "none";
+    adminPanel.style.display = "none";
+
+    // Show login form when PageUp key pressed
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "PageUp") {
+        if (loginForm.style.display === "none") {
+          loginForm.style.display = "block";
+          document.getElementById("adminPass").focus();
+        }
+      }
+    });
+
     // Login button click
     loginBtn.addEventListener("click", () => {
       const pass = document.getElementById("adminPass").value;
@@ -509,7 +522,7 @@
 
     // Logout button click
     logoutBtn.addEventListener("click", () => {
-      loginForm.style.display = "block";
+      loginForm.style.display = "none";
       adminPanel.style.display = "none";
       document.getElementById("adminPass").value = "";
       loginMsg.textContent = "";
