@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Website Hub</title>
+  <title>Website Hub (Local Demo)</title>
   <style>
-    /* Simple clean styling */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       max-width: 600px;
@@ -118,7 +117,7 @@
 </head>
 <body>
 
-  <h1>Website Hub</h1>
+  <h1>Website Hub (Local Demo)</h1>
 
   <section id="publicLinks">
     <h2>Available Links</h2>
@@ -157,29 +156,14 @@
     <button id="logoutBtn">Logout</button>
   </section>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
-
   <script>
-    // -------- Your Firebase config here --------
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // -------- Admin password (change this!) --------
     const ADMIN_PASSWORD = "admin123";
 
-    // -------- Elements --------
+    // In-memory data store for links and clicks
+    const links = {};
+    let linkIdCounter = 1;
+
+    // DOM elements
     const linkList = document.getElementById("linkList");
     const adminPanel = document.getElementById("adminPanel");
     const loginForm = document.getElementById("loginForm");
@@ -189,12 +173,15 @@
     const addLinkForm = document.getElementById("addLinkForm");
     const logoutBtn = document.getElementById("logoutBtn");
 
-    let isAdmin = false;
-
     // Render public links
-    function renderLinks(links) {
+    function renderLinks() {
       linkList.innerHTML = "";
-      for (const id in links) {
+      const keys = Object.keys(links);
+      if (keys.length === 0) {
+        linkList.innerHTML = "<li><em>No links added yet.</em></li>";
+        return;
+      }
+      keys.forEach(id => {
         const { name, url } = links[id];
         const li = document.createElement("li");
         const a = document.createElement("a");
@@ -204,97 +191,81 @@
         a.rel = "noopener noreferrer";
         a.addEventListener("click", (e) => {
           e.preventDefault();
-          incrementClicks(id).then(() => {
-            window.open(url, "_blank");
-          });
+          incrementClicks(id);
+          window.open(url, "_blank");
         });
         li.appendChild(a);
         linkList.appendChild(li);
-      }
-      if (!Object.keys(links).length) {
-        linkList.innerHTML = "<li><em>No links added yet.</em></li>";
-      }
+      });
     }
 
-    // Render admin table with click counts
-    function renderAdminTable(links) {
+    // Render admin table
+    function renderAdminTable() {
       adminLinkTable.innerHTML = "";
-      for (const id in links) {
-        const { name, url, clicks = 0 } = links[id];
+      const keys = Object.keys(links);
+      if (keys.length === 0) {
+        adminLinkTable.innerHTML = '<tr><td colspan="3" style="text-align:center;"><em>No links added yet.</em></td></tr>';
+        return;
+      }
+      keys.forEach(id => {
+        const { name, url, clicks } = links[id];
         const tr = document.createElement("tr");
         tr.innerHTML = `<td>${escapeHtml(name)}</td><td><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a></td><td>${clicks}</td>`;
         adminLinkTable.appendChild(tr);
-      }
-      if (!Object.keys(links).length) {
-        adminLinkTable.innerHTML = `<tr><td colspan="3" style="text-align:center;"><em>No links added yet.</em></td></tr>`;
-      }
+      });
     }
 
     // Escape HTML to prevent injection
     function escapeHtml(text) {
-      const div = document.createElement('div');
+      const div = document.createElement("div");
       div.textContent = text;
       return div.innerHTML;
     }
 
-    // Increment click count
-    async function incrementClicks(id) {
-      const refClicks = db.ref(`links/${id}/clicks`);
-      const snapshot = await refClicks.once("value");
-      const currentClicks = snapshot.val() || 0;
-      await refClicks.set(currentClicks + 1);
+    // Increment clicks
+    function incrementClicks(id) {
+      links[id].clicks++;
+      renderAdminTable();
     }
 
-    // Fetch links from Firebase
-    function fetchLinks() {
-      db.ref("links").on("value", (snapshot) => {
-        const data = snapshot.val() || {};
-        renderLinks(data);
-        if (isAdmin) renderAdminTable(data);
-      });
-    }
-
-    // Add new link
+    // Add link form submit
     addLinkForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const name = document.getElementById("siteName").value.trim();
       const url = document.getElementById("siteURL").value.trim();
+      if (!name || !url) return alert("Please fill in both fields.");
 
-      if (!name || !url) {
-        alert("Please fill in both fields.");
-        return;
-      }
-
-      const newLinkRef = db.ref("links").push();
-      newLinkRef.set({ name, url, clicks: 0 }).then(() => {
-        addLinkForm.reset();
-      });
+      const id = linkIdCounter++;
+      links[id] = { name, url, clicks: 0 };
+      addLinkForm.reset();
+      renderLinks();
+      renderAdminTable();
     });
 
-    // Login handler
+    // Login button click
     loginBtn.addEventListener("click", () => {
       const pass = document.getElementById("adminPass").value;
       if (pass === ADMIN_PASSWORD) {
-        isAdmin = true;
+        loginMsg.textContent = "";
         loginForm.style.display = "none";
         adminPanel.style.display = "block";
-        loginMsg.textContent = "";
-        fetchLinks();
+        renderLinks();
+        renderAdminTable();
       } else {
         loginMsg.textContent = "Incorrect password.";
       }
     });
 
-    // Logout handler
+    // Logout button click
     logoutBtn.addEventListener("click", () => {
-      isAdmin = false;
-      adminPanel.style.display = "none";
       loginForm.style.display = "block";
+      adminPanel.style.display = "none";
       document.getElementById("adminPass").value = "";
+      loginMsg.textContent = "";
     });
 
-    // Load public links on page load
-    fetchLinks();
+    // Initial render public links (empty at start)
+    renderLinks();
   </script>
 
 </body>
