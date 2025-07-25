@@ -26,22 +26,27 @@
       border-radius: 8px;
       box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
       margin: 1em 0;
-      padding: 1em;
+      padding: 0;
       display: flex;
       gap: 1em;
-      align-items: flex-start;
+      align-items: stretch;
+      overflow: hidden;
     }
     .link-card img {
-      max-width: 100px;
-      max-height: 80px;
-      object-fit: contain;
-      border-radius: 6px;
+      width: 150px; /* fixed width */
+      height: 100%; /* fill card height */
+      object-fit: cover;
+      border-radius: 8px 0 0 8px;
       flex-shrink: 0;
       background: white;
-      border: 1px solid #ccc;
+      border-right: 1px solid #ccc;
     }
     .link-content {
       flex-grow: 1;
+      padding: 1em;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
     .link-content h3 {
       margin: 0 0 0.3em 0;
@@ -51,11 +56,13 @@
       margin: 0.3em 0 0.6em 0;
       font-size: 0.9em;
       color: #222;
+      flex-grow: 1;
     }
     .link-content a {
       font-weight: 600;
       color: #004080;
       text-decoration: underline;
+      align-self: flex-start;
     }
     .link-content a:hover {
       color: #002050;
@@ -209,7 +216,7 @@
   </section>
 
   <script>
-    const ADMIN_PASSWORD = "admin123";
+    const ADMIN_PASSWORD = "Ku2023!@";
 
     // In-memory data store
     const links = {};
