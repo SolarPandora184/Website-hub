@@ -38,12 +38,15 @@
       justify-content: center;
       border-radius: 8px 0 0 8px; /* round left corners */
       flex-shrink: 0;
+      cursor: zoom-in; /* indicate zoom possible */
     }
     .image-container img {
       max-width: 100%;
       height: auto;
       display: block;
       border-radius: 6px;
+      user-select: none;
+      pointer-events: auto;
     }
     .link-content {
       background: white;
@@ -166,6 +169,28 @@
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
+
+    /* Zoom overlay styles */
+    #zoomOverlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+      z-index: 9999;
+    }
+    #zoomOverlay img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.6);
+      user-select: none;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -221,6 +246,11 @@
     <button id="logoutBtn">Logout</button>
   </section>
 
+  <!-- Zoom overlay container -->
+  <div id="zoomOverlay" tabindex="-1" aria-hidden="true">
+    <img src="" alt="Zoomed image" />
+  </div>
+
   <script>
     const ADMIN_PASSWORD = "Ku2023!@";
 
@@ -237,6 +267,9 @@
     const adminLinkTable = document.getElementById("adminLinkTable");
     const addLinkForm = document.getElementById("addLinkForm");
     const logoutBtn = document.getElementById("logoutBtn");
+
+    const zoomOverlay = document.getElementById("zoomOverlay");
+    const zoomImage = zoomOverlay.querySelector("img");
 
     // Escape HTML helper
     function escapeHtml(text) {
@@ -266,6 +299,21 @@
           const imgElem = document.createElement("img");
           imgElem.src = image.trim();
           imgElem.alt = name + " image";
+          imgElem.tabIndex = 0; // keyboard focusable for accessibility
+          imgElem.style.cursor = "zoom-in";
+
+          // Click to zoom handler
+          imgElem.addEventListener("click", () => {
+            openZoom(image.trim(), name + " image");
+          });
+          // Keyboard accessibility (Enter or Space)
+          imgElem.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              openZoom(image.trim(), name + " image");
+            }
+          });
+
           imageContainer.appendChild(imgElem);
         }
 
@@ -304,6 +352,35 @@
         linkList.appendChild(li);
       });
     }
+
+    // Open zoom overlay
+    function openZoom(src, alt) {
+      zoomImage.src = src;
+      zoomImage.alt = alt;
+      zoomOverlay.style.display = "flex";
+      zoomOverlay.setAttribute("aria-hidden", "false");
+      zoomOverlay.focus();
+    }
+
+    // Close zoom overlay
+    function closeZoom() {
+      zoomOverlay.style.display = "none";
+      zoomOverlay.setAttribute("aria-hidden", "true");
+      zoomImage.src = "";
+      zoomImage.alt = "";
+    }
+
+    // Close on click outside image or pressing Escape
+    zoomOverlay.addEventListener("click", (e) => {
+      if (e.target === zoomOverlay) {
+        closeZoom();
+      }
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && zoomOverlay.style.display === "flex") {
+        closeZoom();
+      }
+    });
 
     // Render admin table
     function renderAdminTable() {
