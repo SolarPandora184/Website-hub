@@ -5,40 +5,144 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Website Hub</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 2em; }
-    h1 { margin-bottom: 0.5em; }
-    #adminPanel { display: none; margin-top: 2em; }
-    label, input, button { display: block; margin: 0.5em 0; }
-    table { border-collapse: collapse; width: 100%; margin-top: 1em; }
-    th, td { border: 1px solid #ccc; padding: 0.5em; text-align: left; }
-    #loginForm { max-width: 300px; margin-bottom: 2em; }
+    /* Simple clean styling */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 600px;
+      margin: 2em auto;
+      padding: 0 1em;
+      color: #222;
+      background: #f9f9f9;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #004080;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li a {
+      display: block;
+      background: #e0f0ff;
+      margin: 0.5em 0;
+      padding: 0.75em 1em;
+      text-decoration: none;
+      color: #004080;
+      border-radius: 6px;
+      box-shadow: 1px 1px 4px rgba(0,0,0,0.1);
+      transition: background 0.3s;
+    }
+    li a:hover {
+      background: #b0d4ff;
+    }
+    #adminPanel {
+      display: none;
+      margin-top: 2em;
+      background: white;
+      padding: 1em 1.5em;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    form label {
+      display: block;
+      margin-top: 1em;
+      font-weight: 600;
+    }
+    form input {
+      width: 100%;
+      padding: 0.5em;
+      margin-top: 0.25em;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+    }
+    form button {
+      margin-top: 1.5em;
+      width: 100%;
+      padding: 0.75em;
+      font-size: 1.1em;
+      background-color: #004080;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    form button:hover {
+      background-color: #003060;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1em;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.6em;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #e0f0ff;
+    }
+    #logoutBtn {
+      margin-top: 1em;
+      background: #b03030;
+      color: white;
+      border: none;
+      padding: 0.6em 1em;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    #logoutBtn:hover {
+      background: #801818;
+    }
+    #loginMsg {
+      color: red;
+      margin-top: 0.5em;
+      font-weight: 600;
+      text-align: center;
+    }
+    #loginForm {
+      max-width: 320px;
+      margin: 2em auto;
+      background: white;
+      padding: 1em 1.5em;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
+
   <h1>Website Hub</h1>
 
-  <div id="publicLinks">
-    <h2>Links</h2>
-    <ul id="linkList"></ul>
-  </div>
+  <section id="publicLinks">
+    <h2>Available Links</h2>
+    <ul id="linkList" aria-live="polite" aria-label="List of websites"></ul>
+  </section>
 
-  <hr />
-
-  <div id="loginForm">
+  <section id="loginForm">
     <h2>Admin Login</h2>
-    <label for="adminPass">Password:</label>
-    <input type="password" id="adminPass" autocomplete="off" />
+    <label for="adminPass">Password</label>
+    <input type="password" id="adminPass" autocomplete="off" aria-required="true" />
     <button id="loginBtn">Login</button>
-    <p id="loginMsg" style="color:red;"></p>
-  </div>
+    <p id="loginMsg" role="alert" aria-live="assertive"></p>
+  </section>
 
-  <div id="adminPanel">
+  <section id="adminPanel" aria-live="polite" aria-label="Admin panel">
     <h2>Admin Panel</h2>
-    <form id="addLinkForm">
-      <label for="siteName">Site Name:</label>
+
+    <form id="addLinkForm" aria-label="Add new link form">
+      <label for="siteName">Site Name</label>
       <input type="text" id="siteName" required />
-      <label for="siteURL">Site URL:</label>
-      <input type="url" id="siteURL" required />
+
+      <label for="siteURL">Site URL</label>
+      <input type="url" id="siteURL" required placeholder="https://example.com" />
+
       <button type="submit">Add Link</button>
     </form>
 
@@ -49,15 +153,16 @@
       </thead>
       <tbody id="adminLinkTable"></tbody>
     </table>
-    <button id="logoutBtn" style="margin-top: 1em;">Logout</button>
-  </div>
 
-  <!-- Firebase SDK -->
+    <button id="logoutBtn">Logout</button>
+  </section>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
 
   <script>
-    // ======= Firebase config here =======
+    // -------- Your Firebase config here --------
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
       authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -67,13 +172,14 @@
       messagingSenderId: "YOUR_SENDER_ID",
       appId: "YOUR_APP_ID"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // ======= Simple admin password (change this!) =======
-    const ADMIN_PASSWORD = "Ku2023!@";
+    // -------- Admin password (change this!) --------
+    const ADMIN_PASSWORD = "admin123";
 
-    // ======= DOM Elements =======
+    // -------- Elements --------
     const linkList = document.getElementById("linkList");
     const adminPanel = document.getElementById("adminPanel");
     const loginForm = document.getElementById("loginForm");
@@ -83,10 +189,7 @@
     const addLinkForm = document.getElementById("addLinkForm");
     const logoutBtn = document.getElementById("logoutBtn");
 
-    // ======= State =======
     let isAdmin = false;
-
-    // ======= Functions =======
 
     // Render public links
     function renderLinks(links) {
@@ -108,6 +211,9 @@
         li.appendChild(a);
         linkList.appendChild(li);
       }
+      if (!Object.keys(links).length) {
+        linkList.innerHTML = "<li><em>No links added yet.</em></li>";
+      }
     }
 
     // Render admin table with click counts
@@ -116,12 +222,22 @@
       for (const id in links) {
         const { name, url, clicks = 0 } = links[id];
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${name}</td><td><a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a></td><td>${clicks}</td>`;
+        tr.innerHTML = `<td>${escapeHtml(name)}</td><td><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a></td><td>${clicks}</td>`;
         adminLinkTable.appendChild(tr);
+      }
+      if (!Object.keys(links).length) {
+        adminLinkTable.innerHTML = `<tr><td colspan="3" style="text-align:center;"><em>No links added yet.</em></td></tr>`;
       }
     }
 
-    // Increment click count for a link
+    // Escape HTML to prevent injection
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Increment click count
     async function incrementClicks(id) {
       const refClicks = db.ref(`links/${id}/clicks`);
       const snapshot = await refClicks.once("value");
@@ -129,7 +245,7 @@
       await refClicks.set(currentClicks + 1);
     }
 
-    // Fetch all links from Firebase and update UI
+    // Fetch links from Firebase
     function fetchLinks() {
       db.ref("links").on("value", (snapshot) => {
         const data = snapshot.val() || {};
@@ -138,12 +254,16 @@
       });
     }
 
-    // Add new link to Firebase
+    // Add new link
     addLinkForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const name = document.getElementById("siteName").value.trim();
       const url = document.getElementById("siteURL").value.trim();
-      if (!name || !url) return;
+
+      if (!name || !url) {
+        alert("Please fill in both fields.");
+        return;
+      }
 
       const newLinkRef = db.ref("links").push();
       newLinkRef.set({ name, url, clicks: 0 }).then(() => {
@@ -151,7 +271,7 @@
       });
     });
 
-    // Admin login handler
+    // Login handler
     loginBtn.addEventListener("click", () => {
       const pass = document.getElementById("adminPass").value;
       if (pass === ADMIN_PASSWORD) {
@@ -165,15 +285,17 @@
       }
     });
 
-    // Logout
+    // Logout handler
     logoutBtn.addEventListener("click", () => {
       isAdmin = false;
       adminPanel.style.display = "none";
       loginForm.style.display = "block";
+      document.getElementById("adminPass").value = "";
     });
 
-    // On page load, fetch links for public display
+    // Load public links on page load
     fetchLinks();
   </script>
+
 </body>
 </html>
