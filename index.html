@@ -2,203 +2,465 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Website Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Website Hub (Local Demo with Images & Descriptions)</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f0f0f0;
-      margin: 0;
-      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 600px;
+      margin: 2em auto;
+      padding: 0 1em;
+      color: #222;
+      background: #f9f9f9;
     }
-
-    .container {
-      max-width: 800px;
-      margin: 30px auto;
-      padding: 20px;
-    }
-
-    .card {
-      background: #cce4ff;
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 20px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .card img {
-      width: 100%;
-      height: auto;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: transform 0.2s ease;
-    }
-
-    .card img:hover {
-      transform: scale(1.02);
-    }
-
-    .description {
-      margin-top: 10px;
-    }
-
-    .admin {
+    h1, h2 {
       text-align: center;
-      margin-bottom: 20px;
+      color: #004080;
+    }
+    #linkList {
+      padding: 0;
+      list-style: none;
+    }
+    .link-card {
+      display: flex;
+      margin: 1em 0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
+      background: white;
+    }
+    .image-container {
+      background: #e0f0ff;
+      width: 160px;  /* blue block width */
+      padding: 0.5em; /* padding inside blue block */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px 0 0 8px; /* round left corners */
+      flex-shrink: 0;
+      cursor: zoom-in; /* indicate zoom possible */
+    }
+    .image-container img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 6px;
+      user-select: none;
+      pointer-events: auto;
+    }
+    .link-content {
+      background: white;
+      padding: 1em;
+      flex-grow: 1;
+      border-radius: 0 8px 8px 0; /* round right corners */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .link-content h3 {
+      margin: 0 0 0.3em 0;
+      color: #003060;
+    }
+    .link-content p {
+      margin: 0.3em 0 0.6em 0;
+      font-size: 0.9em;
+      color: #222;
+      flex-grow: 1;
+    }
+    .link-content a {
+      font-weight: 600;
+      color: #004080;
+      text-decoration: underline;
+      align-self: flex-start;
+    }
+    .link-content a:hover {
+      color: #002050;
     }
 
-    #adminSection {
+    #adminPanel {
       display: none;
-      margin-top: 20px;
+      margin-top: 2em;
+      background: white;
+      padding: 1em 1.5em;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-
-    input, textarea {
+    form label {
+      display: block;
+      margin-top: 1em;
+      font-weight: 600;
+    }
+    form input, form textarea {
       width: 100%;
-      margin-top: 10px;
-      padding: 8px;
+      padding: 0.5em;
+      margin-top: 0.25em;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 1em;
       box-sizing: border-box;
     }
-
-    button {
-      padding: 8px 16px;
-      margin-top: 10px;
-      background: #007bff;
+    form textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+    form button {
+      margin-top: 1.5em;
+      width: 100%;
+      padding: 0.75em;
+      font-size: 1.1em;
+      background-color: #004080;
       color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      transition: background 0.3s;
     }
-
-    button:hover {
-      background: #0056b3;
+    form button:hover {
+      background-color: #003060;
     }
-
-    /* Image Zoom Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 999;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.7);
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1em;
+      font-size: 0.9em;
     }
-
-    .modal-content {
-      margin: 5% auto;
-      display: block;
-      max-width: 90%;
-      max-height: 80%;
-      border-radius: 10px;
-      box-shadow: 0 0 15px #000;
-      animation: zoom 0.3s ease;
+    th, td {
+      text-align: left;
+      padding: 0.5em;
+      border-bottom: 1px solid #ddd;
+      vertical-align: middle;
     }
-
-    @keyframes zoom {
-      from { transform: scale(0.7); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+    th {
+      background-color: #e0f0ff;
     }
-
-    .modal-close {
-      position: absolute;
-      top: 20px;
-      right: 30px;
-      font-size: 30px;
+    td img {
+      max-width: 60px;
+      max-height: 50px;
+      object-fit: contain;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    #logoutBtn {
+      margin-top: 1em;
+      background: #b03030;
       color: white;
+      border: none;
+      padding: 0.6em 1em;
+      border-radius: 6px;
       cursor: pointer;
+      width: 100%;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    #logoutBtn:hover {
+      background: #801818;
+    }
+    #loginMsg {
+      color: red;
+      margin-top: 0.5em;
+      font-weight: 600;
+      text-align: center;
+    }
+    #loginForm {
+      max-width: 320px;
+      margin: 2em auto;
+      background: white;
+      padding: 1em 1.5em;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    /* Zoom overlay styles */
+    #zoomOverlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+      z-index: 9999;
+    }
+    #zoomOverlay img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.6);
+      user-select: none;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="admin">
-      <input type="password" id="adminPassword" placeholder="Enter admin password" />
-      <button onclick="checkPassword()">Login</button>
-    </div>
 
-    <div id="adminSection">
-      <h3>Add New Link</h3>
-      <input type="text" id="linkTitle" placeholder="Website Title" />
-      <input type="url" id="linkURL" placeholder="Website URL" />
-      <input type="text" id="imageURL" placeholder="Optional Image URL" />
-      <textarea id="description" placeholder="Optional Description"></textarea>
-      <button onclick="addCard()">Add Website</button>
-    </div>
+  <h1>Website Hub (Local Demo with Images & Descriptions)</h1>
 
-    <div id="linksContainer"></div>
-  </div>
+  <section id="publicLinks">
+    <h2>Available Links</h2>
+    <ul id="linkList" aria-live="polite" aria-label="List of websites"></ul>
+  </section>
 
-  <!-- Modal for Image Zoom -->
-  <div class="modal" id="imageModal" onclick="closeModal()">
-    <span class="modal-close" onclick="closeModal()">&times;</span>
-    <img class="modal-content" id="modalImage" />
+  <section id="loginForm">
+    <h2>Admin Login</h2>
+    <label for="adminPass">Password</label>
+    <input type="password" id="adminPass" autocomplete="off" aria-required="true" />
+    <button id="loginBtn">Login</button>
+    <p id="loginMsg" role="alert" aria-live="assertive"></p>
+  </section>
+
+  <section id="adminPanel" aria-live="polite" aria-label="Admin panel">
+    <h2>Admin Panel</h2>
+
+    <form id="addLinkForm" aria-label="Add new link form">
+      <label for="siteName">Site Name</label>
+      <input type="text" id="siteName" required />
+
+      <label for="siteURL">Site URL</label>
+      <input type="url" id="siteURL" required placeholder="https://example.com" />
+
+      <label for="siteImage">Image URL (optional)</label>
+      <input type="url" id="siteImage" placeholder="https://example.com/image.jpg" />
+
+      <label for="siteDescription">Description (optional)</label>
+      <textarea id="siteDescription" placeholder="Short description"></textarea>
+
+      <button type="submit">Add Link</button>
+    </form>
+
+    <h3>Link Click Counts</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Site Name</th>
+          <th>URL</th>
+          <th>Image</th>
+          <th>Description</th>
+          <th>Clicks</th>
+        </tr>
+      </thead>
+      <tbody id="adminLinkTable"></tbody>
+    </table>
+
+    <button id="logoutBtn">Logout</button>
+  </section>
+
+  <!-- Zoom overlay container -->
+  <div id="zoomOverlay" tabindex="-1" aria-hidden="true">
+    <img src="" alt="Zoomed image" />
   </div>
 
   <script>
     const ADMIN_PASSWORD = "Ku2023!@";
 
-    function checkPassword() {
-      const input = document.getElementById("adminPassword").value;
-      if (input === ADMIN_PASSWORD) {
-        document.getElementById("adminSection").style.display = "block";
+    // In-memory data store
+    const links = {};
+    let linkIdCounter = 1;
+
+    // DOM elements
+    const linkList = document.getElementById("linkList");
+    const adminPanel = document.getElementById("adminPanel");
+    const loginForm = document.getElementById("loginForm");
+    const loginBtn = document.getElementById("loginBtn");
+    const loginMsg = document.getElementById("loginMsg");
+    const adminLinkTable = document.getElementById("adminLinkTable");
+    const addLinkForm = document.getElementById("addLinkForm");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    const zoomOverlay = document.getElementById("zoomOverlay");
+    const zoomImage = zoomOverlay.querySelector("img");
+
+    // Escape HTML helper
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Render public links as cards
+    function renderLinks() {
+      linkList.innerHTML = "";
+      const keys = Object.keys(links);
+      if (keys.length === 0) {
+        linkList.innerHTML = "<li><em>No links added yet.</em></li>";
+        return;
+      }
+      keys.forEach(id => {
+        const { name, url, image, description } = links[id];
+        const li = document.createElement("li");
+        li.className = "link-card";
+
+        // Image container (optional)
+        let imageContainer = null;
+        if (image && image.trim() !== "") {
+          imageContainer = document.createElement("div");
+          imageContainer.className = "image-container";
+          const imgElem = document.createElement("img");
+          imgElem.src = image.trim();
+          imgElem.alt = name + " image";
+          imgElem.tabIndex = 0; // keyboard focusable for accessibility
+          imgElem.style.cursor = "zoom-in";
+
+          // Click to zoom handler
+          imgElem.addEventListener("click", () => {
+            openZoom(image.trim(), name + " image");
+          });
+          // Keyboard accessibility (Enter or Space)
+          imgElem.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              openZoom(image.trim(), name + " image");
+            }
+          });
+
+          imageContainer.appendChild(imgElem);
+        }
+
+        // Content container
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "link-content";
+
+        const title = document.createElement("h3");
+        title.textContent = name;
+
+        const desc = document.createElement("p");
+        if (description && description.trim() !== "") {
+          desc.textContent = description.trim();
+        }
+
+        const linkAnchor = document.createElement("a");
+        linkAnchor.href = url;
+        linkAnchor.textContent = url;
+        linkAnchor.target = "_blank";
+        linkAnchor.rel = "noopener noreferrer";
+        linkAnchor.addEventListener("click", (e) => {
+          e.preventDefault();
+          incrementClicks(id);
+          window.open(url, "_blank");
+        });
+
+        contentDiv.appendChild(title);
+        if (desc.textContent) contentDiv.appendChild(desc);
+        contentDiv.appendChild(linkAnchor);
+
+        if (imageContainer) {
+          li.appendChild(imageContainer);
+        }
+        li.appendChild(contentDiv);
+
+        linkList.appendChild(li);
+      });
+    }
+
+    // Open zoom overlay
+    function openZoom(src, alt) {
+      zoomImage.src = src;
+      zoomImage.alt = alt;
+      zoomOverlay.style.display = "flex";
+      zoomOverlay.setAttribute("aria-hidden", "false");
+      zoomOverlay.focus();
+    }
+
+    // Close zoom overlay
+    function closeZoom() {
+      zoomOverlay.style.display = "none";
+      zoomOverlay.setAttribute("aria-hidden", "true");
+      zoomImage.src = "";
+      zoomImage.alt = "";
+    }
+
+    // Close on click outside image or pressing Escape
+    zoomOverlay.addEventListener("click", (e) => {
+      if (e.target === zoomOverlay) {
+        closeZoom();
+      }
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && zoomOverlay.style.display === "flex") {
+        closeZoom();
+      }
+    });
+
+    // Render admin table
+    function renderAdminTable() {
+      adminLinkTable.innerHTML = "";
+      const keys = Object.keys(links);
+      if (keys.length === 0) {
+        adminLinkTable.innerHTML = '<tr><td colspan="5" style="text-align:center;"><em>No links added yet.</em></td></tr>';
+        return;
+      }
+      keys.forEach(id => {
+        const { name, url, clicks, image, description } = links[id];
+        const tr = document.createElement("tr");
+
+        const safeName = escapeHtml(name);
+        const safeUrl = escapeHtml(url);
+        const safeDesc = escapeHtml(description || "");
+        const safeImg = escapeHtml(image || "");
+
+        tr.innerHTML = `
+          <td>${safeName}</td>
+          <td><a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${safeUrl}</a></td>
+          <td>${safeImg ? `<img src="${safeImg}" alt="Image for ${safeName}">` : ""}</td>
+          <td>${safeDesc}</td>
+          <td>${clicks}</td>
+        `;
+        adminLinkTable.appendChild(tr);
+      });
+    }
+
+    // Increment clicks
+    function incrementClicks(id) {
+      links[id].clicks++;
+      renderAdminTable();
+    }
+
+    // Add link form submit
+    addLinkForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = document.getElementById("siteName").value.trim();
+      const url = document.getElementById("siteURL").value.trim();
+      const image = document.getElementById("siteImage").value.trim();
+      const description = document.getElementById("siteDescription").value.trim();
+
+      if (!name || !url) {
+        alert("Please fill in Site Name and Site URL.");
+        return;
+      }
+
+      const id = linkIdCounter++;
+      links[id] = { name, url, image, description, clicks: 0 };
+      addLinkForm.reset();
+      renderLinks();
+      renderAdminTable();
+    });
+
+    // Login button click
+    loginBtn.addEventListener("click", () => {
+      const pass = document.getElementById("adminPass").value;
+      if (pass === ADMIN_PASSWORD) {
+        loginMsg.textContent = "";
+        loginForm.style.display = "none";
+        adminPanel.style.display = "block";
+        renderLinks();
+        renderAdminTable();
       } else {
-        alert("Incorrect password.");
+        loginMsg.textContent = "Incorrect password.";
       }
-    }
+    });
 
-    function addCard() {
-      const title = document.getElementById("linkTitle").value;
-      const url = document.getElementById("linkURL").value;
-      const image = document.getElementById("imageURL").value;
-      const desc = document.getElementById("description").value;
+    // Logout button click
+    logoutBtn.addEventListener("click", () => {
+      loginForm.style.display = "block";
+      adminPanel.style.display = "none";
+      document.getElementById("adminPass").value = "";
+      loginMsg.textContent = "";
+    });
 
-      const card = document.createElement("div");
-      card.className = "card";
-
-      if (image) {
-        const img = document.createElement("img");
-        img.src = image;
-        img.alt = title;
-        img.onclick = () => showImage(image);
-        card.appendChild(img);
-      }
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.target = "_blank";
-      link.innerText = title;
-      link.style.display = "block";
-      link.style.fontWeight = "bold";
-      link.style.fontSize = "18px";
-      link.style.marginTop = "10px";
-      card.appendChild(link);
-
-      if (desc) {
-        const p = document.createElement("p");
-        p.className = "description";
-        p.innerText = desc;
-        card.appendChild(p);
-      }
-
-      document.getElementById("linksContainer").appendChild(card);
-
-      // Clear inputs
-      document.getElementById("linkTitle").value = "";
-      document.getElementById("linkURL").value = "";
-      document.getElementById("imageURL").value = "";
-      document.getElementById("description").value = "";
-    }
-
-    function showImage(src) {
-      const modal = document.getElementById("imageModal");
-      const modalImg = document.getElementById("modalImage");
-      modalImg.src = src;
-      modal.style.display = "block";
-    }
-
-    function closeModal() {
-      document.getElementById("imageModal").style.display = "none";
-    }
+    // Initial render
+    renderLinks();
   </script>
+
 </body>
 </html>
